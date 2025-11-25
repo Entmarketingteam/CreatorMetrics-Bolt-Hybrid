@@ -867,3 +867,21 @@ a {
   margin-top: 2px;
   opacity: 0.7;
 }
+
+.cm-sample-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.cm-sample-link {
+  color: #a855f7;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cm-sample-link:hover {
+  color: #d8b4fe;
+}

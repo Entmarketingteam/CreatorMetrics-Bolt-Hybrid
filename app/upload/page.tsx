@@ -139,6 +139,29 @@ export default function UploadPage() {
         IG → LTK → Amazon funnel.
       </p>
 
+      <div className="cm-panel" style={{ marginTop: 16 }}>
+        <div className="cm-panel-header">
+          <div>
+            <div className="cm-panel-title">Need sample exports?</div>
+            <div className="cm-panel-subtitle">
+              Use these if you don't have IG / LTK / Amazon data on hand.
+            </div>
+          </div>
+        </div>
+
+        <div className="cm-sample-links">
+          <a href="/samples/instagram.csv" download className="cm-sample-link">
+            Download Instagram CSV
+          </a>
+          <a href="/samples/ltk_analytics.csv" download className="cm-sample-link">
+            Download LTK Analytics CSV
+          </a>
+          <a href="/samples/amazon_fee.zip" download className="cm-sample-link">
+            Download Amazon Fee ZIP
+          </a>
+        </div>
+      </div>
+
       <form
         onSubmit={runIngest}
         className="cm-panel"
