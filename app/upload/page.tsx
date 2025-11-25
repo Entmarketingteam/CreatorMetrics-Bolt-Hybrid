@@ -1,74 +1,114 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
+
+type IngestResult = {
+  igPosts: number;
+  ltkProducts: number;
+  ltkEarningsRows: number;
+  amazonItems: number;
+  creatorFunnels: any[];
+};
 
 export default function UploadPage() {
-  const [instagram, setInstagram] = useState<File | null>(null);
-  const [ltk, setLTK] = useState<File | null>(null);
-  const [amazon, setAmazon] = useState<File | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<IngestResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleUpload() {
-    const form = new FormData();
-    if (instagram) form.append('instagram', instagram);
-    if (ltk) form.append('ltk', ltk);
-    if (amazon) form.append('amazon', amazon);
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files) return;
+    setFiles(Array.from(e.target.files));
+    setResult(null);
+    setError(null);
+  }
 
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: form,
-    });
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!files.length) return;
 
-    const data = await res.json();
-    setResult(data);
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const formData = new FormData();
+      for (const file of files) {
+        formData.append("files", file, file.name);
+      }
+
+      const res = await fetch("/api/ingest", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Ingest failed");
+      }
+
+      const json = await res.json();
+      setResult(json);
+    } catch (err: any) {
+      setError(err.message ?? "Unknown error");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-50 px-0 py-0">
-      <div className="max-w-4xl mx-auto px-4 md:px-0 py-8 space-y-6">
-        <h1 className="text-2xl font-semibold">Upload Data</h1>
-        <p className="text-sm text-neutral-400">
-          Upload CSV or XML exports from Instagram, LTK, or Amazon to run them through the ingestion pipeline.
-        </p>
+    <div>
+      <h1 className="cm-section-title">Upload exports</h1>
+      <p className="cm-section-subtitle">
+        Drop Instagram Business Suite CSVs, LTK analytics/earnings CSVs, and
+        Amazon Affiliate Fee reports (ZIP/XML). We'll normalize them into a
+        single funnel.
+      </p>
 
-        <div className="space-y-4">
-          <FileInput label="Instagram CSV" onChange={setInstagram} />
-          <FileInput label="LTK CSV" onChange={setLTK} />
-          <FileInput label="Amazon XML" onChange={setAmazon} />
+      <form onSubmit={onSubmit} className="cm-panel" style={{ marginTop: 16 }}>
+        <div style={{ marginBottom: 12 }}>
+          <input
+            type="file"
+            multiple
+            onChange={onFileChange}
+            className="cm-textarea"
+            style={{ padding: 8, height: "auto" }}
+          />
+          <div className="cm-section-subtitle" style={{ marginTop: 6 }}>
+            Supported now:
+            <br />
+            • Instagram Business Suite CSV
+            <br />
+            • LTK analytics & earnings CSV
+            <br />
+            • Amazon "Fee-*" ZIPs (Earnings, Orders, Tracking, etc.)
+          </div>
         </div>
 
         <button
-          onClick={handleUpload}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm"
+          type="submit"
+          className="cm-ghost-button cm-ghost-button-strong"
+          disabled={loading || !files.length}
         >
-          Ingest Data
+          {loading ? "Ingesting…" : "Run ingest pipeline"}
         </button>
+      </form>
 
-        {result && (
-          <pre className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 text-xs whitespace-pre-wrap max-h-96 overflow-auto">
+      {error && (
+        <div className="cm-panel" style={{ marginTop: 16 }}>
+          <div className="cm-panel-title">Error</div>
+          <pre className="cm-codeblock">{error}</pre>
+        </div>
+      )}
+
+      {result && (
+        <div className="cm-panel" style={{ marginTop: 16 }}>
+          <div className="cm-panel-title">Ingest result (summary)</div>
+          <pre className="cm-codeblock">
             {JSON.stringify(result, null, 2)}
           </pre>
-        )}
-      </div>
-    </main>
-  );
-}
-
-function FileInput({
-  label,
-  onChange,
-}: {
-  label: string;
-  onChange: (f: File | null) => void;
-}) {
-  return (
-    <label className="block space-y-1 text-sm">
-      <span className="text-neutral-300">{label}</span>
-      <input
-        type="file"
-        className="bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 w-full text-xs"
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
-      />
-    </label>
+        </div>
+      )}
+    </div>
   );
 }
