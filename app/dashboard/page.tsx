@@ -1,6 +1,7 @@
 import { getOverallSummary, getPrimaryFunnel, getActiveFunnels } from "@/lib/funnelStore";
 import { getCreatorById } from "@/lib/demoData";
 import FunnelChart from "@/components/FunnelChart";
+import DailyDigest from "./DailyDigest";
 
 function MetricCard(props: {
   label: string;
@@ -218,6 +219,8 @@ export default function DashboardPage() {
           </div>
         </section>
       )}
+
+      <DailyDigest />
     </div>
   );
 }
