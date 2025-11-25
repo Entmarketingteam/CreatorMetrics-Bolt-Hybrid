@@ -1,16 +1,17 @@
-import './globals.css';
-import { Shell } from '../components/Shell';
-import type { ReactNode } from 'react';
+import type { Metadata } from "next";
+import "./globals.css";
+import { Shell } from "../components/Shell";
 
-export const metadata = {
-  title: 'CreatorMetrics',
-  description: 'Full-funnel analytics for creators',
+export const metadata: Metadata = {
+  title: "CreatorMetrics · Hackathon Build",
+  description:
+    "CreatorMetrics – IG → LTK → Amazon funnel analytics for creators and agencies.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-neutral-950 text-neutral-50">
+      <body className="cm-body">
         <Shell>{children}</Shell>
       </body>
     </html>
