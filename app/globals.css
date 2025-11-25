@@ -948,3 +948,62 @@ a {
   font-size: 13px;
   color: #e5e7eb;
 }
+
+.cm-card,
+.cm-panel {
+  transition: transform 0.15s ease, box-shadow 0.15s ease,
+    border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.cm-card:hover,
+.cm-panel:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.55);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+
+.cm-funnel-track {
+  overflow: hidden;
+}
+
+.cm-funnel-fill {
+  transition: width 0.4s ease-out;
+}
+
+.cm-nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.cm-nav-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    circle at left,
+    rgba(124, 58, 237, 0.28),
+    transparent 60%
+  );
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.cm-nav-item:hover::before {
+  opacity: 1;
+}
+
+.cm-insights-form {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cm-insights-output {
+  margin-top: 16px;
+}
+
+.cm-insights-text {
+  white-space: pre-wrap;
+}
