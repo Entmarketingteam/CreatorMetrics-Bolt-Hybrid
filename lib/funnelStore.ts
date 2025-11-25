@@ -105,3 +105,8 @@ export function getPrimaryFunnel(): CreatorFunnel | null {
   }
   return funnels[0] ?? null;
 }
+
+export function getFunnelByCreatorId(creatorId: string) {
+  const funnels = getActiveFunnels();
+  return funnels.find((f) => f.creatorId === creatorId) ?? null;
+}
