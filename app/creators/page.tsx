@@ -1,38 +1,57 @@
-import { getCreators } from '../../lib/storage';
+import Link from "next/link";
+import { demoCreators, demoCreatorFunnels } from "@/lib/demoData";
 
-export const dynamic = 'force-dynamic';
-
-export default async function CreatorsPage() {
-  const creators = await getCreators();
-
+export default function CreatorsPage() {
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-50 px-0 py-0">
-      <div className="max-w-5xl mx-auto px-4 md:px-0 py-8 space-y-6">
-        <header>
-          <h1 className="text-2xl font-semibold">Creators</h1>
-          <p className="text-sm text-neutral-400">
-            Each creator rolls up their IG → LTK → Amazon funnel.
-          </p>
-        </header>
+    <div>
+      <h1 className="cm-section-title">Creators</h1>
+      <p className="cm-section-subtitle">
+        Each creator with their funnel and platform mix (demo mode).
+      </p>
 
-        <div className="space-y-3 text-sm">
-          {creators.map((c) => (
-            <a
-              key={c.id}
-              href={`/creators/${c.id}`}
-              className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-900/70 px-4 py-3 hover:border-neutral-500 transition-colors"
+      <div className="cm-creators-grid">
+        {demoCreators.map((creator) => {
+          const funnel = demoCreatorFunnels.find(
+            (f) => f.creatorId === creator.id
+          );
+          const revenue =
+            funnel?.revenueByPlatform.reduce(
+              (s, r) => s + r.revenue,
+              0
+            ) ?? 0;
+
+          return (
+            <Link
+              key={creator.id}
+              href={`/creators/${creator.id}`}
+              className="cm-creator-card"
             >
-              <div>
-                <p className="font-medium">{c.displayName}</p>
-                <p className="text-xs text-neutral-500">@{c.handle}</p>
+              <div className="cm-creator-header">
+                <div className="cm-avatar-circle">
+                  {creator.avatarInitials}
+                </div>
+                <div>
+                  <div className="cm-creator-name">{creator.name}</div>
+                  <div className="cm-creator-handle">
+                    {creator.handle}
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-neutral-500">
-                Platforms: {c.platforms.join(', ')}
-              </p>
-            </a>
-          ))}
-        </div>
+              <div className="cm-creator-row">
+                <span className="cm-pill-platform">
+                  {creator.platforms.map((p) => p.toUpperCase()).join(" · ")}
+                </span>
+              </div>
+              <div className="cm-creator-row">
+                <span className="cm-creator-label">Period Revenue</span>
+                <span className="cm-creator-value">
+                  ${revenue.toLocaleString()}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
       </div>
-    </main>
+    </div>
   );
 }

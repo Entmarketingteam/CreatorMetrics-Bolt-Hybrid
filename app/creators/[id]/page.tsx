@@ -1,134 +1,161 @@
+import { notFound } from "next/navigation";
 import {
   getCreatorById,
-  getCampaigns,
-  getMappings,
-  getPosts,
-  getPostMetrics,
-} from '../../../lib/storage';
-import { buildFunnelViews } from '../../../lib/matching';
-import PostList from '../../../components/PostList';
+  getCreatorFunnel,
+  FunnelStage,
+} from "@/lib/demoData";
 
-interface Params {
-  params: { id: string };
+function FunnelMini({ funnel }: { funnel: FunnelStage[] }) {
+  const max = funnel[0]?.value ?? 0;
+  return (
+    <div className="cm-funnel-list cm-funnel-list-mini">
+      {funnel.map((stage) => {
+        const pct = max === 0 ? 0 : (stage.value / max) * 100;
+        return (
+          <div key={stage.stage} className="cm-funnel-row">
+            <div className="cm-funnel-label">
+              <span>{stage.stage.toUpperCase()}</span>
+              <span className="cm-funnel-value">
+                {stage.value.toLocaleString()}
+              </span>
+            </div>
+            <div className="cm-funnel-track">
+              <div
+                className="cm-funnel-fill"
+                style={{ width: `${pct}%` }}
+              ></div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
-export const dynamic = 'force-dynamic';
+type Props = {
+  params: { id: string };
+};
 
-export default async function CreatorDetailPage({ params }: Params) {
-  const [creator, campaigns, mappings, posts, metrics] = await Promise.all([
-    getCreatorById(params.id),
-    getCampaigns(),
-    getMappings(),
-    getPosts(),
-    getPostMetrics(),
-  ]);
+export default function CreatorDetailPage({ params }: Props) {
+  const creator = getCreatorById(params.id);
+  const funnel = getCreatorFunnel(params.id);
 
-  if (!creator) {
-    return (
-      <main className="min-h-screen bg-neutral-950 text-neutral-50 flex items-center justify-center">
-        <p className="text-sm text-neutral-400">Creator not found.</p>
-      </main>
-    );
-  }
+  if (!creator || !funnel) return notFound();
 
-  const creatorCampaigns = campaigns.filter((c) => c.creatorId === params.id);
-  const creatorMappings = mappings.filter((m) => m.creatorId === params.id);
-  const funnels = buildFunnelViews(posts, metrics, creatorMappings);
-  const creatorPosts = posts.filter((p) => p.creatorId === params.id);
+  const totalRevenue = funnel.revenueByPlatform.reduce(
+    (s, r) => s + r.revenue,
+    0
+  );
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-50 px-0 py-0">
-      <div className="max-w-5xl mx-auto px-4 md:px-0 py-8 space-y-6">
-        <header className="space-y-1">
-          <p className="text-xs text-neutral-500">
-            <a href="/creators" className="hover:underline">
-              ← Back to creators
-            </a>
-          </p>
-          <h1 className="text-2xl font-semibold">{creator.displayName}</h1>
-          <p className="text-sm text-neutral-400">@{creator.handle}</p>
-          <p className="text-xs text-neutral-500">
-            Platforms: {creator.platforms.join(', ')}
-          </p>
-        </header>
+    <div>
+      <div className="cm-breadcrumb">
+        <span>Creators</span>
+        <span>/</span>
+        <span>{creator.name}</span>
+      </div>
 
-        <section className="space-y-2">
-          <h2 className="text-sm font-medium text-neutral-200">Funnel Views</h2>
-          {funnels.length === 0 && (
-            <p className="text-xs text-neutral-500">
-              No funnel data yet. Ingest LTK / Amazon / Instagram exports to see a full funnel.
-            </p>
-          )}
-          <div className="space-y-3">
-            {funnels.map((f) => (
-              <div
-                key={f.mappingId}
-                className="rounded-xl border border-neutral-800 bg-neutral-900/70 px-4 py-3 space-y-2 text-xs"
-              >
-                <p className="text-neutral-400">
-                  Mapping ID: <span className="font-mono">{f.mappingId}</span>
-                </p>
-                <FunnelRow label="Impressions" value={f.funnel.impressions} max={f.funnel.impressions} />
-                <FunnelRow label="Clicks" value={f.funnel.clicks} max={f.funnel.impressions} />
-                <FunnelRow label="DPVs" value={f.funnel.detailPageViews} max={f.funnel.impressions} />
-                <FunnelRow label="ATC" value={f.funnel.addToCarts} max={f.funnel.impressions} />
-                <FunnelRow label="Conversions" value={f.funnel.conversions} max={f.funnel.impressions} />
-                <p className="text-neutral-400">
-                  Revenue: <span className="font-semibold">${f.funnel.revenue.toLocaleString()}</span>
-                </p>
+      <div className="cm-creator-detail-header">
+        <div className="cm-avatar-circle cm-avatar-lg">
+          {creator.avatarInitials}
+        </div>
+        <div>
+          <h1 className="cm-section-title">{creator.name}</h1>
+          <p className="cm-section-subtitle">
+            {creator.handle} ·{" "}
+            {creator.platforms.map((p) => p.toUpperCase()).join(" · ")}
+          </p>
+        </div>
+        <div className="cm-creator-detail-metrics">
+          <div>
+            <div className="cm-creator-label">Period Revenue</div>
+            <div className="cm-creator-big">
+              ${totalRevenue.toLocaleString()}
+            </div>
+          </div>
+          <div>
+            <div className="cm-creator-label">Revenue vs last period</div>
+            <div className="cm-card-pill cm-card-pill-up">
+              ▲ {funnel.comparedToLastPeriod.revenueDeltaPct.toFixed(1)}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="cm-creator-detail-grid">
+        <section className="cm-panel">
+          <div className="cm-panel-header">
+            <div>
+              <div className="cm-panel-title">Funnel</div>
+              <div className="cm-panel-subtitle">
+                Top-of-funnel to orders for this creator.
+              </div>
+            </div>
+          </div>
+          <FunnelMini funnel={funnel.funnel} />
+        </section>
+
+        <section className="cm-panel">
+          <div className="cm-panel-header">
+            <div>
+              <div className="cm-panel-title">Revenue by platform</div>
+            </div>
+          </div>
+          <div className="cm-table-wrap">
+            <table className="cm-table">
+              <thead>
+                <tr>
+                  <th>Platform</th>
+                  <th>Revenue</th>
+                  <th>Orders</th>
+                  <th>Clicks</th>
+                  <th>New vs Returning</th>
+                </tr>
+              </thead>
+              <tbody>
+                {funnel.revenueByPlatform.map((row) => (
+                  <tr key={row.platform}>
+                    <td>{row.platform.toUpperCase()}</td>
+                    <td>${row.revenue.toLocaleString()}</td>
+                    <td>{row.orders.toLocaleString()}</td>
+                    <td>{row.clicks.toLocaleString()}</td>
+                    <td>
+                      {row.newCustomers}/{row.returningCustomers}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="cm-panel cm-panel-full">
+          <div className="cm-panel-header">
+            <div>
+              <div className="cm-panel-title">Top Posts</div>
+              <div className="cm-panel-subtitle">
+                Cross-platform demo winners.
+              </div>
+            </div>
+          </div>
+          <div className="cm-topposts">
+            {funnel.topPosts.map((p) => (
+              <div key={p.id} className="cm-toppost">
+                <div className="cm-toppost-header">
+                  <span className="cm-pill-platform">
+                    {p.platform.toUpperCase()}
+                  </span>
+                  <span className="cm-toppost-title">{p.title}</span>
+                </div>
+                <div className="cm-toppost-metrics">
+                  <span>{p.clicks.toLocaleString()} clicks</span>
+                  <span>{p.orders.toLocaleString()} orders</span>
+                  <span>${p.revenue.toLocaleString()}</span>
+                </div>
               </div>
             ))}
           </div>
         </section>
-
-        <section className="space-y-2">
-          <h2 className="text-sm font-medium text-neutral-200">Campaigns</h2>
-          <div className="space-y-2 text-sm">
-            {creatorCampaigns.length === 0 && (
-              <p className="text-xs text-neutral-500">No campaigns yet.</p>
-            )}
-            {creatorCampaigns.map((c) => (
-              <a
-                key={c.id}
-                href={`/campaigns/${c.id}`}
-                className="block rounded-xl border border-neutral-800 bg-neutral-900/70 px-4 py-3 hover:border-neutral-500 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{c.name}</p>
-                    <p className="text-xs text-neutral-500">Brand: {c.brand}</p>
-                  </div>
-                  <p className="text-[11px] text-neutral-500">
-                    {c.startDate} → {c.endDate || 'ongoing'}
-                  </p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-2">
-          <h2 className="text-sm font-medium text-neutral-200">Posts</h2>
-          <PostList posts={creatorPosts} />
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function FunnelRow({ label, value, max }: { label: string; value: number; max: number }) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-[11px]">
-        <span className="text-neutral-300">{label}</span>
-        <span className="font-mono text-neutral-400">{value.toLocaleString()}</span>
-      </div>
-      <div className="h-1.5 rounded-full bg-neutral-800 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400"
-          style={{ width: `${pct}%` }}
-        />
       </div>
     </div>
   );
