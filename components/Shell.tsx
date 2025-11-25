@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const navItems = [
@@ -15,6 +15,7 @@ const navItems = [
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mode, setMode] = useState<"demo" | "real">("demo");
   const [hasReal, setHasReal] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -24,6 +25,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
   >([]);
   const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
+
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState("");
+  const [commandResults, setCommandResults] = useState<
+    { type: "creator" | "page"; label: string; sub?: string; href: string }[]
+  >([]);
 
   useEffect(() => {
     async function load() {
@@ -51,6 +58,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
       }
     }
     loadCreators();
+  }, []);
+
+  useEffect(() => {
+    function onKeydown(e: KeyboardEvent) {
+      const isMac = navigator.platform.toLowerCase().includes("mac");
+      const meta = isMac ? e.metaKey : e.ctrlKey;
+      if (meta && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandOpen((open) => !open);
+        setCommandQuery("");
+        setCommandResults([]);
+      }
+    }
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
   }, []);
 
   async function toggleMode() {
@@ -111,6 +133,61 @@ export function Shell({ children }: { children: React.ReactNode }) {
     } finally {
       setResetting(false);
     }
+  }
+
+  async function runCommandSearch(q: string) {
+    const trimmed = q.trim().toLowerCase();
+    if (!trimmed) {
+      setCommandResults([]);
+      return;
+    }
+
+    const basePages: { type: "page"; label: string; sub?: string; href: string }[] =
+      [
+        { type: "page", label: "Dashboard", sub: "Overview", href: "/dashboard" },
+        { type: "page", label: "Creators", sub: "All creators", href: "/creators" },
+        { type: "page", label: "Upload", sub: "Ingest exports", href: "/upload" },
+        { type: "page", label: "AI Insights", sub: "Ask the agent", href: "/insights" },
+        { type: "page", label: "Setup wizard", sub: "Workspace", href: "/setup" },
+        { type: "page", label: "Settings", sub: "Workspace settings", href: "/settings" },
+      ];
+
+    const pageMatches = basePages.filter(
+      (p) =>
+        p.label.toLowerCase().includes(trimmed) ||
+        (p.sub ?? "").toLowerCase().includes(trimmed)
+    );
+
+    let creatorMatches: { type: "creator"; label: string; sub?: string; href: string }[] = [];
+
+    try {
+      const res = await fetch("/api/creators");
+      if (res.ok) {
+        const data = await res.json();
+        const creators = (data.creators ?? []) as {
+          id: string;
+          name: string;
+          handle?: string;
+        }[];
+
+        creatorMatches = creators
+          .filter(
+            (c) =>
+              c.name.toLowerCase().includes(trimmed) ||
+              (c.handle ?? "").toLowerCase().includes(trimmed)
+          )
+          .map((c) => ({
+            type: "creator" as const,
+            label: c.name,
+            sub: c.handle ?? "",
+            href: `/creators/${c.id}`,
+          }));
+      }
+    } catch {
+      // ignore
+    }
+
+    setCommandResults([...creatorMatches, ...pageMatches].slice(0, 8));
   }
 
   return (
@@ -180,6 +257,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
             )}
 
             <button
+              type="button"
+              className="cm-ghost-button"
+              onClick={() => {
+                setIsCommandOpen(true);
+                setCommandQuery("");
+                setCommandResults([]);
+              }}
+            >
+              ⌘K Search
+            </button>
+
+            <button
               className={
                 "cm-ghost-button" +
                 (mode === "real" ? " cm-ghost-button-live" : "")
@@ -208,6 +297,62 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         <div className="cm-main-inner">{children}</div>
       </main>
+
+      {isCommandOpen && (
+        <div
+          className="cm-command-overlay"
+          onClick={() => setIsCommandOpen(false)}
+        >
+          <div
+            className="cm-command-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="cm-command-header">
+              <input
+                autoFocus
+                className="cm-command-input"
+                placeholder="Search creators, pages… (Cmd/Ctrl + K)"
+                value={commandQuery}
+                onChange={(e) => {
+                  const q = e.target.value;
+                  setCommandQuery(q);
+                  runCommandSearch(q);
+                }}
+              />
+            </div>
+            <div className="cm-command-body">
+              {commandResults.length === 0 ? (
+                <div className="cm-command-empty">Start typing to search…</div>
+              ) : (
+                <ul className="cm-command-list">
+                  {commandResults.map((item, idx) => (
+                    <li
+                      key={idx}
+                      className="cm-command-item"
+                      onClick={() => {
+                        setIsCommandOpen(false);
+                        router.push(item.href);
+                      }}
+                    >
+                      <div className="cm-command-item-label">
+                        {item.label}
+                      </div>
+                      {item.sub && (
+                        <div className="cm-command-item-sub">
+                          {item.sub}
+                        </div>
+                      )}
+                      <div className="cm-command-item-tag">
+                        {item.type === "creator" ? "Creator" : "Page"}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

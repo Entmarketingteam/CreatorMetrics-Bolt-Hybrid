@@ -12,7 +12,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      router.push("/dashboard");
+      router.push("/setup");
     }, 400);
   }
 
