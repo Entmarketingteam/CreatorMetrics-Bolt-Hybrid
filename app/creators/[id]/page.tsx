@@ -1,33 +1,7 @@
 import { notFound } from "next/navigation";
-import { getCreatorById, FunnelStage } from "@/lib/demoData";
+import { getCreatorById } from "@/lib/demoData";
 import { getActiveFunnels } from "@/lib/funnelStore";
-
-function FunnelMini({ funnel }: { funnel: FunnelStage[] }) {
-  const max = funnel[0]?.value ?? 0;
-  return (
-    <div className="cm-funnel-list cm-funnel-list-mini">
-      {funnel.map((stage) => {
-        const pct = max === 0 ? 0 : (stage.value / max) * 100;
-        return (
-          <div key={stage.stage} className="cm-funnel-row">
-            <div className="cm-funnel-label">
-              <span>{stage.stage.toUpperCase()}</span>
-              <span className="cm-funnel-value">
-                {stage.value.toLocaleString()}
-              </span>
-            </div>
-            <div className="cm-funnel-track">
-              <div
-                className="cm-funnel-fill"
-                style={{ width: `${pct}%` }}
-              ></div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+import FunnelChart from "@/components/FunnelChart";
 
 type Props = {
   params: { id: string };
@@ -90,7 +64,7 @@ export default function CreatorDetailPage({ params }: Props) {
               </div>
             </div>
           </div>
-          <FunnelMini funnel={funnel.funnel} />
+          <FunnelChart funnel={funnel.funnel} />
         </section>
 
         <section className="cm-panel">
