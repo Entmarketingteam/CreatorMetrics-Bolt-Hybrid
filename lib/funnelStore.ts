@@ -1,11 +1,35 @@
-import { CreatorFunnel, demoCreatorFunnels } from "./demoData";
+import {
+  CreatorFunnel,
+  demoCreatorFunnels,
+} from "./demoData";
+import {
+  hasPersistedFunnels,
+  loadPersistedFunnels,
+  savePersistedFunnels,
+} from "./db";
 
 let currentFunnels: CreatorFunnel[] | null = null;
 let mode: "demo" | "real" = "demo";
 
+(() => {
+  try {
+    const persisted = loadPersistedFunnels();
+    if (persisted && persisted.length > 0) {
+      currentFunnels = persisted;
+      mode = "real";
+      console.log(
+        `[funnelStore] Loaded ${persisted.length} persisted funnel(s) from /data/funnels.json`
+      );
+    }
+  } catch (err) {
+    console.error("[funnelStore] Failed to initialize from disk:", err);
+  }
+})();
+
 export function setRealFunnels(funnels: CreatorFunnel[]) {
   currentFunnels = funnels;
   mode = "real";
+  savePersistedFunnels(funnels);
 }
 
 export function getActiveFunnels(): CreatorFunnel[] {
@@ -16,7 +40,8 @@ export function getActiveFunnels(): CreatorFunnel[] {
 }
 
 export function hasRealFunnels(): boolean {
-  return !!currentFunnels && currentFunnels.length > 0;
+  if (currentFunnels && currentFunnels.length > 0) return true;
+  return hasPersistedFunnels();
 }
 
 export function getMode(): "demo" | "real" {
