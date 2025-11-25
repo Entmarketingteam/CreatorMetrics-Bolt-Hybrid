@@ -18,3 +18,225 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.cm-body {
+  margin: 0;
+  padding: 0;
+  background: #0a0a0a;
+  color: #f5f5f5;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.cm-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.cm-sidebar {
+  width: 240px;
+  background: #111;
+  border-right: 1px solid #222;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.cm-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.cm-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cm-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: #999;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  font-size: 0.9375rem;
+}
+
+.cm-nav-item:hover {
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.cm-nav-item.active {
+  background: #1a1a1a;
+  color: #fff;
+  font-weight: 500;
+}
+
+.cm-nav-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+.cm-nav-item.active .cm-nav-icon {
+  opacity: 1;
+}
+
+.cm-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.cm-header {
+  margin-bottom: 2rem;
+}
+
+.cm-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+}
+
+.cm-header p {
+  margin: 0;
+  color: #999;
+  font-size: 0.9375rem;
+}
+
+.cm-card {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.cm-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #fff;
+}
+
+.cm-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.cm-metric {
+  background: #0a0a0a;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 1.25rem;
+}
+
+.cm-metric-label {
+  font-size: 0.875rem;
+  color: #999;
+  margin-bottom: 0.5rem;
+}
+
+.cm-metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+
+.cm-metric-change {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.cm-metric-change.positive {
+  color: #10b981;
+}
+
+.cm-metric-change.negative {
+  color: #ef4444;
+}
+
+.cm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cm-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #999;
+  border-bottom: 1px solid #222;
+}
+
+.cm-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #222;
+  font-size: 0.9375rem;
+}
+
+.cm-table tr:hover {
+  background: #0a0a0a;
+}
+
+.cm-btn {
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  outline: none;
+}
+
+.cm-btn-primary {
+  background: #fff;
+  color: #0a0a0a;
+}
+
+.cm-btn-primary:hover {
+  background: #e5e5e5;
+}
+
+.cm-btn-secondary {
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #222;
+}
+
+.cm-btn-secondary:hover {
+  background: #222;
+}
+
+.cm-sparkline {
+  width: 100%;
+  height: 40px;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .cm-shell {
+    flex-direction: column;
+  }
+
+  .cm-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #222;
+  }
+
+  .cm-main {
+    padding: 1rem;
+  }
+}
