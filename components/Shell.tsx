@@ -19,6 +19,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [hasReal, setHasReal] = useState(false);
   const [toggling, setToggling] = useState(false);
 
+  const [creators, setCreators] = useState<
+    { id: string; name: string; handle?: string }[]
+  >([]);
+  const [selectedCreatorId, setSelectedCreatorId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+
   useEffect(() => {
     async function load() {
       try {
@@ -31,6 +37,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
       }
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    async function loadCreators() {
+      try {
+        const res = await fetch("/api/creators");
+        if (!res.ok) return;
+        const json = await res.json();
+        setCreators(json.creators ?? []);
+        setSelectedCreatorId(json.selectedCreatorId ?? null);
+      } catch {
+      }
+    }
+    loadCreators();
   }, []);
 
   async function toggleMode() {
@@ -60,6 +80,36 @@ export function Shell({ children }: { children: React.ReactNode }) {
       console.error("Mode switch failed", err);
     } finally {
       setToggling(false);
+    }
+  }
+
+  async function handleCreatorChange(
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) {
+    const id = e.target.value || "";
+    const next = id || null;
+    setSelectedCreatorId(next);
+    try {
+      await fetch("/api/creators", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ creatorId: next }),
+      });
+    } catch (err) {
+      console.error("Failed to set creator", err);
+    }
+  }
+
+  async function handleReset() {
+    if (resetting) return;
+    setResetting(true);
+    try {
+      await fetch("/api/reset", { method: "POST" });
+      window.location.reload();
+    } catch (err) {
+      console.error("Reset failed", err);
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -114,6 +164,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="cm-main-header-right">
+            {creators.length > 0 && (
+              <select
+                className="cm-select"
+                value={selectedCreatorId ?? ""}
+                onChange={handleCreatorChange}
+              >
+                <option value="">All creators</option>
+                {creators.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
             <button
               className={
                 "cm-ghost-button" +
@@ -128,6 +193,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 ? "Live Data"
                 : "Demo Mode"}
             </button>
+
+            <button
+              className="cm-ghost-button"
+              onClick={handleReset}
+              disabled={resetting}
+            >
+              {resetting ? "Resetting…" : "Reset data"}
+            </button>
+
             <div className="cm-avatar-circle">NE</div>
           </div>
         </header>

@@ -1,4 +1,5 @@
-import { getOverallSummary, getPrimaryFunnel } from "@/lib/funnelStore";
+import { getOverallSummary, getPrimaryFunnel, getActiveFunnels } from "@/lib/funnelStore";
+import { getCreatorById } from "@/lib/demoData";
 
 function MetricCard(props: {
   label: string;
@@ -57,6 +58,7 @@ function FunnelBar({
 export default function DashboardPage() {
   const summary = getOverallSummary();
   const primaryFunnel = getPrimaryFunnel();
+  const funnels = getActiveFunnels();
 
   return (
     <div className="cm-grid">
@@ -174,6 +176,56 @@ export default function DashboardPage() {
           </div>
         </div>
       </aside>
+
+      {funnels.length > 1 && (
+        <section className="cm-panel" style={{ marginTop: 24, gridColumn: "1 / -1" }}>
+          <div className="cm-panel-header">
+            <div>
+              <div className="cm-panel-title">Creators overview</div>
+              <div className="cm-panel-subtitle">
+                Multi-creator revenue, orders, and clicks for this period.
+              </div>
+            </div>
+          </div>
+          <div className="cm-table-wrap">
+            <table className="cm-table">
+              <thead>
+                <tr>
+                  <th>Creator</th>
+                  <th>Revenue</th>
+                  <th>Orders</th>
+                  <th>Clicks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {funnels.map((f) => {
+                  const creator = getCreatorById(f.creatorId);
+                  const revenue = f.revenueByPlatform.reduce(
+                    (s, r) => s + r.revenue,
+                    0
+                  );
+                  const orders = f.revenueByPlatform.reduce(
+                    (s, r) => s + r.orders,
+                    0
+                  );
+                  const clicks = f.revenueByPlatform.reduce(
+                    (s, r) => s + r.clicks,
+                    0
+                  );
+                  return (
+                    <tr key={f.creatorId}>
+                      <td>{creator?.name ?? f.creatorName}</td>
+                      <td>${revenue.toLocaleString()}</td>
+                      <td>{orders.toLocaleString()}</td>
+                      <td>{clicks.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

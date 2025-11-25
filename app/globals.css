@@ -885,3 +885,66 @@ a {
 .cm-sample-link:hover {
   color: #d8b4fe;
 }
+
+.cm-select {
+  background: #020617;
+  border: 1px solid #1f2937;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #e5e7eb;
+  margin-right: 12px;
+}
+
+.cm-select:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.cm-ghost-button-live {
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+
+.cm-login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top, #111827 0, #020617 60%);
+}
+
+.cm-login-card {
+  background: #020617;
+  border-radius: 24px;
+  padding: 32px;
+  border: 1px solid #1f2937;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.cm-login-form {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cm-login-label {
+  text-align: left;
+  font-size: 13px;
+  color: #9ca3af;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cm-login-input {
+  background: #020617;
+  border-radius: 999px;
+  border: 1px solid #374151;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #e5e7eb;
+}

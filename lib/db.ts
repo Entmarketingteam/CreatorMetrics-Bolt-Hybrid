@@ -44,3 +44,13 @@ export function savePersistedFunnels(funnels: CreatorFunnel[]): void {
     console.error("[db] Failed to save funnels.json:", err);
   }
 }
+
+export function clearPersistedFunnels(): void {
+  try {
+    if (fs.existsSync(FUNNELS_FILE)) {
+      fs.unlinkSync(FUNNELS_FILE);
+    }
+  } catch (err) {
+    console.error("[db] Failed to clear funnels.json:", err);
+  }
+}

@@ -6,10 +6,12 @@ import {
   hasPersistedFunnels,
   loadPersistedFunnels,
   savePersistedFunnels,
+  clearPersistedFunnels,
 } from "./db";
 
 let currentFunnels: CreatorFunnel[] | null = null;
 let mode: "demo" | "real" = "demo";
+let selectedCreatorId: string | null = null;
 
 (() => {
   try {
@@ -52,9 +54,23 @@ export function setMode(next: "demo" | "real") {
   mode = next;
 }
 
+export function getSelectedCreatorId(): string | null {
+  return selectedCreatorId;
+}
+
+export function setSelectedCreatorId(id: string | null) {
+  selectedCreatorId = id;
+}
+
+export function resetToDemo() {
+  currentFunnels = null;
+  mode = "demo";
+  selectedCreatorId = null;
+  clearPersistedFunnels();
+}
+
 export function getOverallSummary() {
-  const funnels = getActiveFunnels();
-  const primary = funnels[0];
+  const primary = getPrimaryFunnel();
   if (!primary) return null;
 
   const totalRevenue = primary.revenueByPlatform.reduce(
@@ -82,5 +98,10 @@ export function getOverallSummary() {
 
 export function getPrimaryFunnel(): CreatorFunnel | null {
   const funnels = getActiveFunnels();
+  if (!funnels.length) return null;
+  if (selectedCreatorId) {
+    const match = funnels.find((f) => f.creatorId === selectedCreatorId);
+    if (match) return match;
+  }
   return funnels[0] ?? null;
 }
