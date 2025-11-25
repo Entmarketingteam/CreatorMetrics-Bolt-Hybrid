@@ -700,6 +700,11 @@ a {
   color: #fff;
 }
 
+.cm-ghost-button-live {
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+
 .cm-main-inner {
   flex: 1;
   padding: 2rem;

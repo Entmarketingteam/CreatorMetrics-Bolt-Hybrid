@@ -1,9 +1,6 @@
 import { notFound } from "next/navigation";
-import {
-  getCreatorById,
-  getCreatorFunnel,
-  FunnelStage,
-} from "@/lib/demoData";
+import { getCreatorById, FunnelStage } from "@/lib/demoData";
+import { getActiveFunnels } from "@/lib/funnelStore";
 
 function FunnelMini({ funnel }: { funnel: FunnelStage[] }) {
   const max = funnel[0]?.value ?? 0;
@@ -38,7 +35,8 @@ type Props = {
 
 export default function CreatorDetailPage({ params }: Props) {
   const creator = getCreatorById(params.id);
-  const funnel = getCreatorFunnel(params.id);
+  const funnels = getActiveFunnels();
+  const funnel = funnels.find((f) => f.creatorId === params.id);
 
   if (!creator || !funnel) return notFound();
 

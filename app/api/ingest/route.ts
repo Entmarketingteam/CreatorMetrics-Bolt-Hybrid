@@ -14,6 +14,7 @@ import {
   AmazonItemMetric,
 } from "@/functions/ingest/amazon";
 import { buildCreatorFunnelFromRaw } from "@/functions/ingest/funnel_builder";
+import { setRealFunnels } from "@/lib/funnelStore";
 
 export const runtime = "nodejs";
 
@@ -57,6 +58,8 @@ export async function POST(req: NextRequest) {
     ltkEarnings,
     amazonItems,
   });
+
+  setRealFunnels(creatorFunnels);
 
   return NextResponse.json({
     igPosts: igPosts.length,

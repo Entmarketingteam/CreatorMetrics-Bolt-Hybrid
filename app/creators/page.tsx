@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { demoCreators, demoCreatorFunnels } from "@/lib/demoData";
+import { demoCreators } from "@/lib/demoData";
+import { getActiveFunnels } from "@/lib/funnelStore";
 
 export default function CreatorsPage() {
+  const funnels = getActiveFunnels();
+
   return (
     <div>
       <h1 className="cm-section-title">Creators</h1>
@@ -11,9 +14,7 @@ export default function CreatorsPage() {
 
       <div className="cm-creators-grid">
         {demoCreators.map((creator) => {
-          const funnel = demoCreatorFunnels.find(
-            (f) => f.creatorId === creator.id
-          );
+          const funnel = funnels.find((f) => f.creatorId === creator.id);
           const revenue =
             funnel?.revenueByPlatform.reduce(
               (s, r) => s + r.revenue,

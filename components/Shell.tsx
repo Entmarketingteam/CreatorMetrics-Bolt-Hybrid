@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -15,6 +15,53 @@ const navItems = [
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mode, setMode] = useState<"demo" | "real">("demo");
+  const [hasReal, setHasReal] = useState(false);
+  const [toggling, setToggling] = useState(false);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/mode");
+        if (!res.ok) return;
+        const json = await res.json();
+        setMode(json.mode);
+        setHasReal(json.hasReal ?? false);
+      } catch {
+      }
+    }
+    load();
+  }, []);
+
+  async function toggleMode() {
+    if (toggling) return;
+    if (!hasReal && mode === "demo") {
+      return;
+    }
+
+    setToggling(true);
+    try {
+      const res = await fetch("/api/mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: mode === "demo" ? "real" : "demo",
+        }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        console.warn("Mode switch error", json);
+        return;
+      }
+      const json = await res.json();
+      setMode(json.mode);
+      setHasReal(json.hasReal ?? hasReal);
+    } catch (err) {
+      console.error("Mode switch failed", err);
+    } finally {
+      setToggling(false);
+    }
+  }
 
   return (
     <div className="cm-app-shell">
@@ -67,7 +114,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="cm-main-header-right">
-            <button className="cm-ghost-button">Demo Mode</button>
+            <button
+              className={
+                "cm-ghost-button" +
+                (mode === "real" ? " cm-ghost-button-live" : "")
+              }
+              onClick={toggleMode}
+              disabled={toggling || (!hasReal && mode === "demo")}
+            >
+              {!hasReal
+                ? "Demo Only"
+                : mode === "real"
+                ? "Live Data"
+                : "Demo Mode"}
+            </button>
             <div className="cm-avatar-circle">NE</div>
           </div>
         </header>

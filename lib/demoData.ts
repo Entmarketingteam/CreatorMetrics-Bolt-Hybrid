@@ -38,6 +38,8 @@ export interface CreatorFunnel {
   topPosts: TopPost[];
   comparedToLastPeriod: {
     revenueDeltaPct: number;
+    clickDeltaPct?: number;
+    ordersDeltaPct?: number;
   };
 }
 

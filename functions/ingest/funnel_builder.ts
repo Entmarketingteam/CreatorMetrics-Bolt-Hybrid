@@ -2,6 +2,7 @@ import {
   CreatorFunnel,
   FunnelStage,
   RevenueByPlatform,
+  getCreatorById,
 } from "@/lib/demoData";
 import { InstagramPostMetric } from "./instagram";
 import { LtkProductMetric, LtkEarningRow } from "./ltk";
@@ -14,11 +15,29 @@ type RawBundle = {
   amazonItems: AmazonItemMetric[];
 };
 
-const CREATOR_ID = "nicki";
-const CREATOR_NAME = "Nicki Entenmann";
+const trackingIdToCreatorId: Record<string, string> = {
+  "nicki-metads-20": "nicki",
+  "nicki-fb-20": "nicki",
+  "nicki-igreel-20": "nicki",
+  "nickientenman-20": "nicki",
+};
+
+function resolveCreatorIdFromBundle(bundle: RawBundle): string {
+  for (const item of bundle.amazonItems) {
+    const tid = item.trackingId?.toLowerCase();
+    if (tid && trackingIdToCreatorId[tid]) {
+      return trackingIdToCreatorId[tid];
+    }
+  }
+
+  return "nicki";
+}
 
 export function buildCreatorFunnelFromRaw(bundle: RawBundle): CreatorFunnel[] {
   const { igPosts, ltkProducts, ltkEarnings, amazonItems } = bundle;
+
+  const creatorId = resolveCreatorIdFromBundle(bundle);
+  const creatorName = getCreatorById(creatorId)?.name ?? "Unknown Creator";
 
   const impressions =
     igPosts.reduce((sum, p) => sum + (p.impressions ?? 0), 0) || 0;
@@ -43,10 +62,22 @@ export function buildCreatorFunnelFromRaw(bundle: RawBundle): CreatorFunnel[] {
 
   const funnel: FunnelStage[] = [
     { stage: "impressions", value: impressions },
-    { stage: "clicks", value: clicks || ltkClicks || amazonClicksEstimate },
-    { stage: "dpv", value: ltkClicks || clicks || amazonClicksEstimate },
-    { stage: "atc", value: Math.round((ltkItems || amazonOrders) * 1.5) },
-    { stage: "orders", value: amazonOrders || ltkItems },
+    {
+      stage: "clicks",
+      value: clicks || ltkClicks || amazonClicksEstimate,
+    },
+    {
+      stage: "dpv",
+      value: ltkClicks || clicks || amazonClicksEstimate,
+    },
+    {
+      stage: "atc",
+      value: Math.round((ltkItems || amazonOrders) * 1.5),
+    },
+    {
+      stage: "orders",
+      value: amazonOrders || ltkItems,
+    },
   ];
 
   const revenueByPlatform: RevenueByPlatform[] = [
@@ -77,13 +108,15 @@ export function buildCreatorFunnelFromRaw(bundle: RawBundle): CreatorFunnel[] {
   ];
 
   const creatorFunnel: CreatorFunnel = {
-    creatorId: CREATOR_ID,
-    creatorName: CREATOR_NAME,
+    creatorId,
+    creatorName,
     funnel,
     revenueByPlatform,
     topPosts: [],
     comparedToLastPeriod: {
       revenueDeltaPct: 0,
+      clickDeltaPct: 0,
+      ordersDeltaPct: 0,
     },
   };
 

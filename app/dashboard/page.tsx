@@ -1,4 +1,4 @@
-import { getOverallSummary, demoCreatorFunnels } from "@/lib/demoData";
+import { getOverallSummary, getPrimaryFunnel } from "@/lib/funnelStore";
 
 function MetricCard(props: {
   label: string;
@@ -56,7 +56,7 @@ function FunnelBar({
 
 export default function DashboardPage() {
   const summary = getOverallSummary();
-  const primaryFunnel = demoCreatorFunnels[0];
+  const primaryFunnel = getPrimaryFunnel();
 
   return (
     <div className="cm-grid">
