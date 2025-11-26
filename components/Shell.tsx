@@ -9,6 +9,7 @@ const PUBLIC_PATHS = ["/login", "/setup", "/share"];
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/creators", label: "Creators" },
+  { href: "/products", label: "Products" },
   { href: "/campaigns", label: "Campaigns" },
   { href: "/insights", label: "Insights" },
   { href: "/agents", label: "Agents" },
@@ -178,6 +179,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       [
         { type: "page", label: "Dashboard", sub: "Overview", href: "/dashboard" },
         { type: "page", label: "Creators", sub: "All creators", href: "/creators" },
+        { type: "page", label: "Products", sub: "Product analytics", href: "/products" },
         { type: "page", label: "Upload", sub: "Ingest exports", href: "/upload" },
         { type: "page", label: "AI Insights", sub: "Ask the agent", href: "/insights" },
         { type: "page", label: "Forecast", sub: "7/30/90-day revenue", href: "/forecast" },

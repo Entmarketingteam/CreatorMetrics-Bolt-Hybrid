@@ -9,6 +9,7 @@ import {
 import { InstagramPostMetric } from "./instagram";
 import { LtkProductMetric, LtkEarningRow } from "./ltk";
 import { AmazonItemMetric } from "./amazon";
+import { ProductMetrics } from "@/lib/types";
 
 type RawBundle = {
   igPosts: InstagramPostMetric[];
@@ -127,11 +128,62 @@ export function buildCreatorFunnelFromRaw(bundle: RawBundle): CreatorFunnel[] {
       },
     ];
 
+    const productMap: Record<string, ProductMetrics> = {};
+
+    for (const item of ltkProducts) {
+      const productId = item.productName?.slice(0, 20) || `ltk_${Math.random()}`;
+      if (!productMap[productId]) {
+        productMap[productId] = {
+          productId,
+          title: item.productName || "Unknown Product",
+          platform: "ltk",
+          clicks: 0,
+          dpv: 0,
+          orders: 0,
+          revenue: 0,
+          conversionRate: 0,
+        };
+      }
+      const prod = productMap[productId];
+      prod.clicks += item.clicks ?? 0;
+      prod.dpv += item.clicks ?? 0;
+      prod.orders += item.itemsSold ?? 0;
+      prod.revenue += item.revenue ?? 0;
+    }
+
+    for (const item of amazonItems) {
+      const productId = item.asin || item.title?.slice(0, 20) || `amz_${Math.random()}`;
+      if (!productMap[productId]) {
+        productMap[productId] = {
+          productId,
+          title: item.title || "Unknown Product",
+          platform: "amazon",
+          clicks: 0,
+          dpv: 0,
+          orders: 0,
+          revenue: 0,
+          conversionRate: 0,
+        };
+      }
+      const prod = productMap[productId];
+      const ordersEstimate = item.itemsShipped ?? 0;
+      prod.clicks += Math.round(ordersEstimate * 15);
+      prod.dpv += Math.round(ordersEstimate * 10);
+      prod.orders += ordersEstimate;
+      prod.revenue += item.revenue || item.adFees || 0;
+    }
+
+    const products = Object.values(productMap).map((p) => ({
+      ...p,
+      conversionRate: p.clicks > 0 ? p.orders / p.clicks : 0,
+    }));
+
     funnels.push({
       creatorId,
       creatorName,
       funnel,
       revenueByPlatform,
+      products,
       topPosts: [],
       comparedToLastPeriod: {
         revenueDeltaPct: 0,

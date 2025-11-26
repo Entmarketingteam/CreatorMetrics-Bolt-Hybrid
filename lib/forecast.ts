@@ -105,3 +105,25 @@ export function buildCreatorForecast(
     forecast90: f90.total,
   };
 }
+
+export function forecastSeries(values: number[], alpha = 0.4): number {
+  if (!values.length) return 0;
+  let f = values[0];
+  for (let i = 1; i < values.length; i++) {
+    f = alpha * values[i] + (1 - alpha) * f;
+  }
+  return f;
+}
+
+export function forecastRevenue(funnel: any): number {
+  const platforms = funnel.revenueByPlatform || [];
+  const totalRevenue = platforms.reduce(
+    (sum: number, p: any) => sum + (p.revenue ?? 0),
+    0
+  );
+
+  if (totalRevenue === 0) return 0;
+
+  const last7Days = Array(7).fill(totalRevenue / 7);
+  return forecastSeries(last7Days) * 7;
+}

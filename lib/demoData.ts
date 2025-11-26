@@ -35,6 +35,7 @@ export interface CreatorFunnel {
   creatorName: string;
   funnel: FunnelStage[];
   revenueByPlatform: RevenueByPlatform[];
+  products?: any[];
   topPosts: TopPost[];
   comparedToLastPeriod: {
     revenueDeltaPct: number;

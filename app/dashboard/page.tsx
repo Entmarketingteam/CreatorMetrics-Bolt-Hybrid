@@ -3,6 +3,7 @@ import { getCreatorById } from "@/lib/demoData";
 import FunnelChart from "@/components/FunnelChart";
 import DailyDigest from "./DailyDigest";
 import AlertsBanner from "@/components/AlertsBanner";
+import { forecastRevenue } from "@/lib/forecast";
 
 function MetricCard(props: {
   label: string;
@@ -63,6 +64,8 @@ export default function DashboardPage() {
   const primaryFunnel = getPrimaryFunnel();
   const funnels = getActiveFunnels();
 
+  const forecast = primaryFunnel ? forecastRevenue(primaryFunnel) : 0;
+
   return (
     <div className="cm-grid">
       <section className="cm-grid-main">
@@ -90,6 +93,28 @@ export default function DashboardPage() {
               value={summary.totalClicks.toLocaleString()}
               delta={summary.clickDeltaPct}
             />
+          </div>
+        )}
+
+        {forecast > 0 && (
+          <div className="cm-panel" style={{ marginTop: 16 }}>
+            <div className="cm-panel-header">
+              <div>
+                <div className="cm-panel-title">7-Day Revenue Forecast</div>
+                <div className="cm-panel-subtitle">
+                  Projection based on recent activity using exponential smoothing.
+                </div>
+              </div>
+            </div>
+
+            <div className="cm-metrics-row" style={{ marginTop: 10 }}>
+              <div className="cm-card">
+                <div className="cm-card-label">Predicted Next 7 Days</div>
+                <div className="cm-card-value">
+                  ${Math.round(forecast).toLocaleString()}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
