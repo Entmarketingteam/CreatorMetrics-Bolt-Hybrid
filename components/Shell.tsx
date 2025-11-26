@@ -12,6 +12,7 @@ const navItems = [
   { href: "/campaigns", label: "Campaigns" },
   { href: "/insights", label: "Insights" },
   { href: "/agents", label: "Agents" },
+  { href: "/forecast", label: "Forecast" },
   { href: "/upload", label: "Upload" },
   { href: "/uploads", label: "Upload History" },
   { href: "/benchmarks", label: "Benchmarks" },
@@ -177,6 +178,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
         { type: "page", label: "Creators", sub: "All creators", href: "/creators" },
         { type: "page", label: "Upload", sub: "Ingest exports", href: "/upload" },
         { type: "page", label: "AI Insights", sub: "Ask the agent", href: "/insights" },
+        { type: "page", label: "Forecast", sub: "7/30/90-day revenue", href: "/forecast" },
+        { type: "page", label: "Benchmarks", sub: "Conversion benchmarks", href: "/benchmarks" },
         { type: "page", label: "Setup wizard", sub: "Workspace", href: "/setup" },
         { type: "page", label: "Settings", sub: "Workspace settings", href: "/settings" },
       ];
