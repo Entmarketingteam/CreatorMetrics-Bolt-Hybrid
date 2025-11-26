@@ -34,6 +34,12 @@ export function setRealFunnels(funnels: CreatorFunnel[]) {
   savePersistedFunnels(funnels);
 }
 
+export function setFunnels(funnels: CreatorFunnel[]) {
+  currentFunnels = funnels;
+  mode = "real";
+  savePersistedFunnels(funnels);
+}
+
 export function getActiveFunnels(): CreatorFunnel[] {
   if (mode === "real" && currentFunnels && currentFunnels.length > 0) {
     return currentFunnels;
