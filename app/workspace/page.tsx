@@ -1,92 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 type Member = {
-  id: string;
   email: string;
   role: "owner" | "editor" | "viewer";
 };
 
-type Workspace = {
-  id: string;
-  name: string;
-  members: Member[];
-};
-
 export default function WorkspacePage() {
-  const [ws, setWs] = useState<Workspace | null>(null);
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"editor" | "viewer">("editor");
-  const [saving, setSaving] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [newEmail, setNewEmail] = useState("");
+  const [newRole, setNewRole] = useState<Member["role"]>("viewer");
 
   useEffect(() => {
     (async () => {
-      try {
-        const res = await fetch("/api/workspace");
-        if (!res.ok) return;
-        const json = await res.json();
-        setWs(json);
-      } catch {
-        // ignore
-      }
+      const res = await fetch("/api/workspace");
+      const json = await res.json().catch(() => ({}));
+      setMembers(json.members ?? []);
     })();
   }, []);
 
   async function addMember() {
-    if (!ws || !email.trim()) return;
-    setSaving(true);
-    try {
-      const members = [
-        ...(ws.members ?? []),
-        {
-          id: `member_${Date.now()}`,
-          email: email.trim(),
-          role,
-        },
-      ];
-      const res = await fetch("/api/workspace", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ members }),
-      });
-      if (res.ok) {
-        const json = await res.json();
-        setWs(json);
-        setEmail("");
-      }
-    } finally {
-      setSaving(false);
-    }
-  }
+    if (!newEmail) return;
 
-  if (!ws) {
-    return (
-      <div>
-        <h1 className="cm-section-title">Workspace</h1>
-        <p className="cm-section-subtitle">Loading workspace…</p>
-      </div>
-    );
+    const res = await fetch("/api/workspace", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: newEmail, role: newRole }),
+    });
+
+    if (res.ok) {
+      const json = await res.json();
+      setMembers(json.members);
+      setNewEmail("");
+      setNewRole("viewer");
+    }
   }
 
   return (
     <div>
       <h1 className="cm-section-title">Workspace</h1>
       <p className="cm-section-subtitle">
-        Manage your CreatorMetrics workspace and collaborators.
+        Manage collaborators and their roles.
       </p>
 
       <div className="cm-panel" style={{ marginTop: 16 }}>
         <div className="cm-panel-header">
           <div>
             <div className="cm-panel-title">Team members</div>
-            <div className="cm-panel-subtitle">
-              Invite teammates to view insights and funnels.
-            </div>
           </div>
         </div>
 
-        <div style={{ marginTop: 12 }}>
+        <div className="cm-table-wrap">
           <table className="cm-table">
             <thead>
               <tr>
@@ -95,8 +60,8 @@ export default function WorkspacePage() {
               </tr>
             </thead>
             <tbody>
-              {(ws.members ?? []).map((m) => (
-                <tr key={m.id}>
+              {members.map((m, i) => (
+                <tr key={i}>
                   <td>{m.email}</td>
                   <td>{m.role}</td>
                 </tr>
@@ -105,37 +70,28 @@ export default function WorkspacePage() {
           </table>
         </div>
 
-        <div
-          style={{
-            marginTop: 12,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            alignItems: "center",
-          }}
-        >
+        {/* Add new member */}
+        <div style={{ marginTop: 20 }}>
           <input
-            className="cm-login-input"
-            style={{ maxWidth: 260 }}
-            placeholder="new.teammate@brand.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            className="cm-input"
+            style={{ marginRight: 8 }}
+            placeholder="member@example.com"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
           />
+
           <select
             className="cm-select"
-            value={role}
-            onChange={(e) => setRole(e.target.value as any)}
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value as any)}
           >
+            <option value="owner">Owner</option>
             <option value="editor">Editor</option>
             <option value="viewer">Viewer</option>
           </select>
-          <button
-            type="button"
-            className="cm-ghost-button cm-ghost-button-strong"
-            disabled={saving}
-            onClick={addMember}
-          >
-            {saving ? "Adding…" : "Add member"}
+
+          <button className="cm-ghost-button" onClick={addMember}>
+            Add
           </button>
         </div>
       </div>

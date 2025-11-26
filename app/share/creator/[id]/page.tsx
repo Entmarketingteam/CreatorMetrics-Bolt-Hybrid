@@ -1,72 +1,57 @@
-import { notFound } from "next/navigation";
-import { getShare } from "@/lib/shares";
-import { getFunnelByCreatorId } from "@/lib/funnelStore";
-import { getCreatorById } from "@/lib/demoData";
-import FunnelChart from "@/components/FunnelChart";
+import { getShareById } from "@/lib/shares";
+import { getActiveFunnels } from "@/lib/funnelStore";
 
-export default function SharedCreatorPage({ params }: { params: { id: string } }) {
-  const share = getShare(params.id);
-  if (!share) return notFound();
+export default function SharedCreatorReport({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const share = getShareById(params.id);
+  if (!share) {
+    return (
+      <div style={{ padding: 40 }}>
+        <h1>Share link not found</h1>
+        <p>This link may be expired or invalid.</p>
+      </div>
+    );
+  }
 
-  const funnel = getFunnelByCreatorId(share.creatorId);
-  if (!funnel) return notFound();
+  const funnels = getActiveFunnels();
+  const funnel = funnels.find((f) => f.creatorId === share.creatorId);
 
-  const creatorMeta = getCreatorById(funnel.creatorId);
-  const name = creatorMeta?.name ?? funnel.creatorName;
+  if (!funnel) {
+    return (
+      <div style={{ padding: 40 }}>
+        <h1>Creator data unavailable</h1>
+        <p>The workspace has no data for this creator.</p>
+      </div>
+    );
+  }
 
-  const totalRevenue = funnel.revenueByPlatform.reduce(
-    (s, r) => s + (r.revenue ?? 0),
+  const totalRevenue = funnel.revenueByPlatform?.reduce(
+    (s, x) => s + (x.revenue ?? 0),
     0
   );
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: 24 }}>
-      <h1 className="cm-section-title">
-        {name} · Creator Report
-      </h1>
-      <p className="cm-section-subtitle">
-        Read-only share link generated from CreatorMetrics.
-      </p>
+    <div style={{ padding: 40 }}>
+      <h1>{funnel.creatorName}</h1>
+      <p style={{ opacity: 0.7 }}>Shared report (read-only)</p>
 
-      <div className="cm-panel" style={{ marginTop: 16 }}>
-        <div className="cm-panel-header">
-          <div>
-            <div className="cm-panel-title">Funnel</div>
-            <div className="cm-panel-subtitle">
-              IG → LTK → Amazon funnel snapshot.
-            </div>
-          </div>
-        </div>
-        <FunnelChart funnel={funnel.funnel} />
+      <div style={{ marginTop: 24 }}>
+        <h2>Revenue</h2>
+        <p>${totalRevenue.toLocaleString()}</p>
       </div>
 
-      <div className="cm-panel" style={{ marginTop: 16 }}>
-        <div className="cm-panel-header">
-          <div>
-            <div className="cm-panel-title">Summary</div>
-            <div className="cm-panel-subtitle">
-              High-level view of performance for this period.
-            </div>
-          </div>
-        </div>
-        <p
-          className="cm-section-subtitle"
-          style={{ marginTop: 10, fontSize: 13 }}
-        >
-          Total revenue this period: ${totalRevenue.toLocaleString()}
-        </p>
+      <div style={{ marginTop: 24 }}>
+        <h2>Funnels</h2>
+        <pre>{JSON.stringify(funnel.funnel, null, 2)}</pre>
       </div>
 
-      <p
-        style={{
-          marginTop: 20,
-          fontSize: 11,
-          color: "#6b7280",
-          textAlign: "right",
-        }}
-      >
-        Powered by CreatorMetrics
-      </p>
+      <div style={{ marginTop: 24 }}>
+        <h2>Platforms</h2>
+        <pre>{JSON.stringify(funnel.revenueByPlatform, null, 2)}</pre>
+      </div>
     </div>
   );
 }

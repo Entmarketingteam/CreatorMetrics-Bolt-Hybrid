@@ -21,7 +21,7 @@ export default function UploadsPage() {
         const json = await res.json();
         setUploads(json.uploads ?? []);
       } catch {
-        // ignore
+        /* ignore */
       }
     })();
   }, []);
@@ -30,7 +30,8 @@ export default function UploadsPage() {
     <div>
       <h1 className="cm-section-title">Upload history</h1>
       <p className="cm-section-subtitle">
-        See past IG / LTK / Amazon exports and how many creators were detected.
+        See previous IG / LTK / Amazon exports and how many creators were
+        detected.
       </p>
 
       <div className="cm-panel" style={{ marginTop: 16 }}>
@@ -42,7 +43,7 @@ export default function UploadsPage() {
 
         {uploads.length === 0 ? (
           <p className="cm-section-subtitle" style={{ marginTop: 10 }}>
-            No uploads logged yet. Try uploading exports on the Upload tab.
+            No uploads yet. Upload exports to populate history.
           </p>
         ) : (
           <div className="cm-table-wrap">

@@ -13,25 +13,22 @@ export type UploadRecord = {
 };
 
 function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-function loadAllUploads(): UploadRecord[] {
+function load(): UploadRecord[] {
+  ensureDataDir();
+  if (!fs.existsSync(UPLOADS_FILE)) return [];
   try {
-    ensureDataDir();
-    if (!fs.existsSync(UPLOADS_FILE)) return [];
-    const raw = fs.readFileSync(UPLOADS_FILE, "utf8");
-    return JSON.parse(raw) as UploadRecord[];
+    return JSON.parse(fs.readFileSync(UPLOADS_FILE, "utf8"));
   } catch {
     return [];
   }
 }
 
-function saveAllUploads(records: UploadRecord[]) {
+function save(list: UploadRecord[]) {
   ensureDataDir();
-  fs.writeFileSync(UPLOADS_FILE, JSON.stringify(records, null, 2), "utf8");
+  fs.writeFileSync(UPLOADS_FILE, JSON.stringify(list, null, 2), "utf8");
 }
 
 export function logUpload(
@@ -39,19 +36,19 @@ export function logUpload(
   creatorsDetected: number,
   status: "processed" | "failed"
 ): UploadRecord {
-  const records = loadAllUploads();
+  const list = load();
   const rec: UploadRecord = {
-    id: `upl_${Date.now()}`,
+    id: `upl_${Date.now().toString(36)}`,
     createdAt: new Date().toISOString(),
     files,
     creatorsDetected,
     status,
   };
-  records.unshift(rec);
-  saveAllUploads(records);
+  list.unshift(rec);
+  save(list);
   return rec;
 }
 
 export function getUploads(): UploadRecord[] {
-  return loadAllUploads();
+  return load();
 }

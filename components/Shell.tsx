@@ -13,6 +13,9 @@ const navItems = [
   { href: "/insights", label: "Insights" },
   { href: "/agents", label: "Agents" },
   { href: "/upload", label: "Upload" },
+  { href: "/uploads", label: "Upload History" },
+  { href: "/benchmarks", label: "Benchmarks" },
+  { href: "/workspace", label: "Workspace" },
 ];
 
 export function Shell({ children }: { children: React.ReactNode }) {

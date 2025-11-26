@@ -4,11 +4,12 @@ import { createShare } from "@/lib/shares";
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({} as any));
-  const creatorId = (body.creatorId as string | undefined)?.trim();
+  const { creatorId } = await req.json().catch(() => ({}));
+
   if (!creatorId) {
-    return NextResponse.json({ error: "creatorId is required" }, { status: 400 });
+    return NextResponse.json({ error: "Missing creatorId" }, { status: 400 });
   }
-  const share = createShare(creatorId);
-  return NextResponse.json(share);
+
+  const record = createShare(creatorId);
+  return NextResponse.json(record);
 }

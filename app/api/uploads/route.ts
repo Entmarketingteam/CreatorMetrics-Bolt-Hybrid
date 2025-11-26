@@ -8,11 +8,12 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({} as any));
+  const body = await req.json().catch(() => ({}));
   const files = (body.files as string[]) ?? [];
   const creatorsDetected = Number(body.creatorsDetected ?? 0);
-  const status: "processed" | "failed" =
-    body.status === "failed" ? "failed" : "processed";
+  const status =
+    body.status === "failed" ? ("failed" as const) : ("processed" as const);
+
   const rec = logUpload(files, creatorsDetected, status);
   return NextResponse.json(rec);
 }
