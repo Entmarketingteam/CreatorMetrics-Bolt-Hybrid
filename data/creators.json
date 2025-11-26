@@ -1,0 +1,23 @@
+[
+  {
+    "id": "nicki",
+    "name": "Nicki Entenmann",
+    "handles": ["nicki.entenmann", "nicki.ent", "nickientenmann"],
+    "trackingIds": ["nickientenman-20"],
+    "ltkNames": ["nicki.entenmann", "Nicki Entenmann"]
+  },
+  {
+    "id": "emily",
+    "name": "Emily Ogan",
+    "handles": ["emily.ogan"],
+    "trackingIds": ["emilyogan-20"],
+    "ltkNames": ["Emily Ogan"]
+  },
+  {
+    "id": "ann",
+    "name": "Ann Schulte",
+    "handles": ["schulteann"],
+    "trackingIds": ["annschulte-20"],
+    "ltkNames": ["Ann Schulte"]
+  }
+]
