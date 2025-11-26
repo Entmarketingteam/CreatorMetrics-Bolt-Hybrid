@@ -1,62 +1,68 @@
 import { NextResponse } from "next/server";
-import { generateAlertsSummary } from "@/lib/alerts";
+import { getAlerts } from "@/lib/alerts";
+import { getActiveFunnels } from "@/lib/funnelStore";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const summary = generateAlertsSummary();
+  const alerts = getAlerts();
+  const funnels = getActiveFunnels();
 
-  const digests = summary.creators.map((c) => {
+  const digests = funnels.map((f) => {
+    const creatorAlerts = alerts.filter(
+      (a) => a.creatorId === f.creatorId && !a.read
+    );
+
     const lines: string[] = [];
 
-    lines.push(
-      `Creator: ${c.creatorName} · Health: ${c.health.label} (${c.health.score}/100)`
+    lines.push(`Creator: ${f.creatorName}`);
+
+    const revenue = f.revenueByPlatform.reduce(
+      (sum, p) => sum + (p.revenue ?? 0),
+      0
     );
-    lines.push(
-      `Revenue: $${c.totalRevenue.toLocaleString()} · Orders: ${c.totalOrders.toLocaleString()} · Clicks: ${c.totalClicks.toLocaleString()}`
+    const orders = f.revenueByPlatform.reduce(
+      (sum, p) => sum + (p.orders ?? 0),
+      0
+    );
+    const clicks = f.revenueByPlatform.reduce(
+      (sum, p) => sum + (p.clicks ?? 0),
+      0
     );
 
-    const highAlerts = c.alerts.filter((a) => a.severity === "high");
-    const medAlerts = c.alerts.filter((a) => a.severity === "medium");
+    lines.push(
+      `Revenue: $${revenue.toLocaleString()} · Orders: ${orders.toLocaleString()} · Clicks: ${clicks.toLocaleString()}`
+    );
 
-    if (highAlerts.length) {
+    const critical = creatorAlerts.filter((a) => a.severity === "critical");
+    const warnings = creatorAlerts.filter((a) => a.severity === "warning");
+
+    if (critical.length) {
       lines.push("");
-      lines.push("⚠️ Priority issues:");
-      highAlerts.slice(0, 2).forEach((a) =>
-        lines.push(`- ${a.title}: ${a.message}`)
+      lines.push("🚨 Critical issues:");
+      critical.slice(0, 2).forEach((a) =>
+        lines.push(`- ${a.metric}: ${a.message}`)
       );
     }
 
-    if (medAlerts.length) {
+    if (warnings.length) {
       lines.push("");
-      lines.push("🟡 Watch items:");
-      medAlerts.slice(0, 2).forEach((a) =>
-        lines.push(`- ${a.title}: ${a.message}`)
+      lines.push("⚠️ Warnings:");
+      warnings.slice(0, 2).forEach((a) =>
+        lines.push(`- ${a.metric}: ${a.message}`)
       );
-    }
-
-    if (c.opportunities.length) {
-      lines.push("");
-      lines.push("💡 Top opportunity to act on next:");
-      const topOpp =
-        c.opportunities.find((o) => o.impact === "high") ??
-        c.opportunities[0];
-      if (topOpp) {
-        lines.push(`- ${topOpp.title}: ${topOpp.description}`);
-      }
     }
 
     return {
-      creatorId: c.creatorId,
-      creatorName: c.creatorName,
-      health: c.health,
+      creatorId: f.creatorId,
+      creatorName: f.creatorName,
+      alertCount: creatorAlerts.length,
       text: lines.join("\n"),
     };
   });
 
   return NextResponse.json({
-    mode: summary.mode,
-    hasReal: summary.hasReal,
     digests,
+    totalAlerts: alerts.filter((a) => !a.read).length,
   });
 }

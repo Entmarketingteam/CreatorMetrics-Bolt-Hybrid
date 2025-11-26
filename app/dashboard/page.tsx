@@ -2,6 +2,7 @@ import { getOverallSummary, getPrimaryFunnel, getActiveFunnels } from "@/lib/fun
 import { getCreatorById } from "@/lib/demoData";
 import FunnelChart from "@/components/FunnelChart";
 import DailyDigest from "./DailyDigest";
+import AlertsBanner from "@/components/AlertsBanner";
 
 function MetricCard(props: {
   label: string;
@@ -69,6 +70,8 @@ export default function DashboardPage() {
         <p className="cm-section-subtitle">
           High-level view of your IG → LTK → Amazon performance (demo data).
         </p>
+
+        <AlertsBanner />
 
         {summary && (
           <div className="cm-metrics-row">

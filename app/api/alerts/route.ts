@@ -1,14 +1,22 @@
-import { NextResponse } from "next/server";
-import { generateAlertsSummary } from "@/lib/alerts";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getAlerts,
+  recomputeAlertsFromFunnels,
+  CreatorFunnel,
+} from "@/lib/alerts";
+import { getActiveFunnels } from "@/lib/funnelStore";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const summary = generateAlertsSummary();
-  return NextResponse.json(summary);
+  const alerts = getAlerts();
+  return NextResponse.json({ alerts });
 }
 
-export async function POST() {
-  const summary = generateAlertsSummary();
-  return NextResponse.json(summary);
+export async function POST(req: NextRequest) {
+  void req;
+
+  const funnels = getActiveFunnels() as unknown as CreatorFunnel[];
+  const alerts = recomputeAlertsFromFunnels(funnels);
+  return NextResponse.json({ alerts });
 }

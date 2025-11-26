@@ -1,235 +1,232 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type {
-  AlertsSummary,
-  AlertSeverity,
-  CreatorAlertSummary,
-} from "@/lib/alerts";
+
+type AlertSeverity = "info" | "warning" | "critical";
+type AlertScope = "creator" | "workspace";
+
+type Alert = {
+  id: string;
+  type: string;
+  severity: AlertSeverity;
+  scope: AlertScope;
+  creatorId?: string;
+  creatorName?: string;
+  metric: string;
+  message: string;
+  currentValue?: number;
+  comparisonValue?: number;
+  changePct?: number | null;
+  createdAt: string;
+  read: boolean;
+};
 
 export default function AlertsPage() {
-  const [data, setData] = useState<AlertsSummary | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [creatorFilter, setCreatorFilter] = useState<string>("all");
-  const [severityFilter, setSeverityFilter] = useState<AlertSeverity | "all">(
-    "all"
-  );
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [recomputing, setRecomputing] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/alerts");
-        if (!res.ok) throw new Error("Failed to load alerts");
-        const json = (await res.json()) as AlertsSummary;
-        setData(json);
-      } catch (err: any) {
-        setError(err.message ?? "Unknown error");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  function filteredCreators(): CreatorAlertSummary[] {
-    if (!data) return [];
-    return data.creators
-      .map((c) => {
-        let alerts = c.alerts;
-        if (severityFilter !== "all") {
-          alerts = alerts.filter((a) => a.severity === severityFilter);
-        }
-        return { ...c, alerts };
-      })
-      .filter((c) => {
-        if (creatorFilter !== "all" && c.creatorId !== creatorFilter) {
-          return false;
-        }
-        return c.alerts.length > 0;
-      });
+  async function fetchAlerts() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/alerts");
+      if (!res.ok) return;
+      const json = await res.json();
+      setAlerts(json.alerts ?? []);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const creatorsWithAlerts = filteredCreators();
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
 
-  const modeLabel =
-    data?.mode === "real"
-      ? "Live data"
-      : "Demo data";
+  async function recompute() {
+    setRecomputing(true);
+    try {
+      const res = await fetch("/api/alerts", {
+        method: "POST",
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      setAlerts(json.alerts ?? []);
+    } catch {
+    } finally {
+      setRecomputing(false);
+    }
+  }
+
+  async function markRead(id: string) {
+    try {
+      const res = await fetch("/api/alerts/mark-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) return;
+      setAlerts((prev) =>
+        prev.map((a) =>
+          a.id === id ? { ...a, read: true } : a
+        )
+      );
+    } catch {
+    }
+  }
+
+  async function markAllRead() {
+    try {
+      await fetch("/api/alerts/mark-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true }),
+      });
+      setAlerts((prev) => prev.map((a) => ({ ...a, read: true })));
+    } catch {
+    }
+  }
+
+  const unreadCount = alerts.filter((a) => !a.read).length;
 
   return (
     <div>
-      <h1 className="cm-section-title">Alerts & Opportunities</h1>
+      <h1 className="cm-section-title">Alerts & anomalies</h1>
       <p className="cm-section-subtitle">
-        CreatorMetrics scans each creator's IG → LTK → Amazon funnel for drop
-        offs, tracking issues, and opportunity areas.
+        Automatic funnel anomaly detection based on workspace benchmarks.
       </p>
+
+      <div
+        className="cm-panel"
+        style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <div>
+          <div className="cm-panel-title">Status</div>
+          <div className="cm-panel-subtitle">
+            {loading
+              ? "Loading alerts…"
+              : unreadCount === 0
+              ? "No unread alerts."
+              : `${unreadCount} unread alert${unreadCount === 1 ? "" : "s"}.`}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            className="cm-ghost-button"
+            onClick={fetchAlerts}
+            disabled={loading}
+          >
+            Refresh
+          </button>
+          <button
+            type="button"
+            className="cm-ghost-button"
+            onClick={markAllRead}
+            disabled={!alerts.length}
+          >
+            Mark all read
+          </button>
+          <button
+            type="button"
+            className="cm-ghost-button cm-ghost-button-strong"
+            onClick={recompute}
+            disabled={recomputing}
+          >
+            {recomputing ? "Recomputing…" : "Recompute from funnels"}
+          </button>
+        </div>
+      </div>
 
       <div className="cm-panel" style={{ marginTop: 16 }}>
         <div className="cm-panel-header">
           <div>
-            <div className="cm-panel-title">Filters</div>
+            <div className="cm-panel-title">Alerts</div>
             <div className="cm-panel-subtitle">
-              {modeLabel} · Automatically generated from your normalized
-              funnels.
+              Funnel drops, RPC anomalies, and traffic spikes by creator.
             </div>
           </div>
         </div>
-        <div
-          style={{
-            marginTop: 12,
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            alignItems: "center",
-          }}
-        >
-          <select
-            className="cm-select"
-            value={creatorFilter}
-            onChange={(e) => setCreatorFilter(e.target.value)}
-          >
-            <option value="all">All creators</option>
-            {data?.creators.map((c) => (
-              <option key={c.creatorId} value={c.creatorId}>
-                {c.creatorName}
-              </option>
-            ))}
-          </select>
 
-          <select
-            className="cm-select"
-            value={severityFilter}
-            onChange={(e) =>
-              setSeverityFilter(e.target.value as AlertSeverity | "all")
-            }
-          >
-            <option value="all">All severities</option>
-            <option value="high">High only</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-        </div>
-      </div>
-
-      {loading && (
-        <div className="cm-panel" style={{ marginTop: 16 }}>
-          <div className="cm-panel-title">Scanning funnels…</div>
-          <div className="cm-section-subtitle">
-            Looking for drop-offs, tracking issues, and quick wins.
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="cm-panel" style={{ marginTop: 16 }}>
-          <div className="cm-panel-title">Error</div>
-          <pre className="cm-codeblock">{error}</pre>
-        </div>
-      )}
-
-      {!loading && !error && creatorsWithAlerts.length === 0 && (
-        <div className="cm-panel" style={{ marginTop: 16 }}>
-          <div className="cm-panel-title">No alerts right now 🎉</div>
-          <p className="cm-section-subtitle">
-            Funnels look stable. Keep driving qualified traffic and check back
-            after your next upload.
+        {loading ? (
+          <p className="cm-section-subtitle" style={{ marginTop: 10 }}>
+            Loading…
           </p>
-        </div>
-      )}
-
-      {creatorsWithAlerts.map((c) => (
-        <div
-          key={c.creatorId}
-          className="cm-panel"
-          style={{ marginTop: 16 }}
-        >
-          <div className="cm-panel-header">
-            <div>
-              <div className="cm-panel-title">
-                {c.creatorName}
-                <span
-                  className={
-                    "cm-pill-badge" +
-                    (c.health.label === "At risk"
-                      ? " cm-pill-badge-live"
-                      : " cm-pill-badge-soft")
-                  }
-                  style={{ marginLeft: 8 }}
-                >
-                  Health: {c.health.label} ({c.health.score}/100)
-                </span>
-              </div>
-              <div className="cm-panel-subtitle">
-                Revenue: ${c.totalRevenue.toLocaleString()} · Orders:{" "}
-                {c.totalOrders.toLocaleString()} · Clicks:{" "}
-                {c.totalClicks.toLocaleString()}
-              </div>
-            </div>
+        ) : alerts.length === 0 ? (
+          <p className="cm-section-subtitle" style={{ marginTop: 10 }}>
+            No alerts yet. Recompute using the button above after ingesting data.
+          </p>
+        ) : (
+          <div className="cm-table-wrap">
+            <table className="cm-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Creator / Scope</th>
+                  <th>Metric</th>
+                  <th>Message</th>
+                  <th>Severity</th>
+                  <th>Read</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {alerts.map((a) => (
+                  <tr
+                    key={a.id}
+                    style={{
+                      opacity: a.read ? 0.6 : 1,
+                    }}
+                  >
+                    <td>
+                      {new Date(a.createdAt).toLocaleString(undefined, {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </td>
+                    <td>
+                      {a.scope === "workspace"
+                        ? "Workspace"
+                        : a.creatorName || a.creatorId || "Creator"}
+                    </td>
+                    <td>{a.metric}</td>
+                    <td>{a.message}</td>
+                    <td>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          padding: "2px 8px",
+                          borderRadius: 999,
+                          border:
+                            a.severity === "critical"
+                              ? "1px solid #f97373"
+                              : a.severity === "warning"
+                              ? "1px solid #facc15"
+                              : "1px solid #4ade80",
+                        }}
+                      >
+                        {a.severity}
+                      </span>
+                    </td>
+                    <td>{a.read ? "Yes" : "No"}</td>
+                    <td style={{ textAlign: "right" }}>
+                      {!a.read && (
+                        <button
+                          type="button"
+                          className="cm-ghost-button"
+                          onClick={() => markRead(a.id)}
+                        >
+                          Mark read
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          <div className="cm-alerts-grid">
-            {c.alerts.map((a) => (
-              <div
-                key={a.id}
-                className={`cm-alert-card cm-alert-${a.severity}`}
-              >
-                <div className="cm-alert-header">
-                  <span className="cm-alert-severity">
-                    {a.severity === "high"
-                      ? "High"
-                      : a.severity === "medium"
-                      ? "Medium"
-                      : "Low"}
-                  </span>
-                  {a.stage && (
-                    <span className="cm-alert-stage">
-                      {safeStage(a.stage)}
-                    </span>
-                  )}
-                </div>
-                <div className="cm-alert-title">{a.title}</div>
-                <div className="cm-alert-message">{a.message}</div>
-              </div>
-            ))}
-
-            {c.opportunities.length > 0 && (
-              <div className="cm-opportunity-column">
-                <div className="cm-panel-title" style={{ marginBottom: 4 }}>
-                  Opportunities
-                </div>
-                <ul className="cm-opportunity-list">
-                  {c.opportunities.map((o) => (
-                    <li key={o.id} className={`cm-opportunity-${o.impact}`}>
-                      <div className="cm-opportunity-title">{o.title}</div>
-                      <div className="cm-opportunity-desc">
-                        {o.description}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
+        )}
+      </div>
     </div>
   );
-}
-
-function safeStage(stage: string) {
-  switch (stage.toLowerCase()) {
-    case "impressions":
-      return "Impressions";
-    case "clicks":
-      return "Clicks";
-    case "dpv":
-      return "Detail page views";
-    case "atc":
-      return "Add to cart";
-    case "orders":
-      return "Orders";
-    default:
-      return stage;
-  }
 }
