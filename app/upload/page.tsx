@@ -30,6 +30,8 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IngestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [fixMode, setFixMode] = useState(false);
+  const [fixSuggestions, setFixSuggestions] = useState<string[]>([]);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -112,6 +114,30 @@ export default function UploadPage() {
     },
     [files]
   );
+
+  const runFixInspector = async () => {
+    if (!files.length) return;
+
+    const payloadFiles = files.map((f) => ({
+      name: f.name,
+      columns: [],
+    }));
+
+    try {
+      const res = await fetch("/api/upload/inspect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ files: payloadFiles }),
+      });
+
+      if (!res.ok) return;
+
+      const json = await res.json();
+      setFixSuggestions(json.suggestions ?? []);
+    } catch (err) {
+      console.error("Fix inspector failed", err);
+    }
+  };
 
   const primaryFunnel = result?.creatorFunnels?.[0];
   const primaryRevenue =
@@ -226,6 +252,55 @@ export default function UploadPage() {
                 + {files.length - 4} more…
               </div>
             )}
+          </div>
+        )}
+
+        {files.length > 0 && (
+          <div
+            style={{
+              marginTop: 12,
+              display: "flex",
+              gap: 8,
+              alignItems: "center",
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                gap: 6,
+                fontSize: 12,
+                color: "#9ca3af",
+                alignItems: "center",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={fixMode}
+                onChange={(e) => setFixMode(e.target.checked)}
+              />
+              <span>Enable "Fix my data" helper</span>
+            </label>
+
+            {fixMode && (
+              <button
+                type="button"
+                className="cm-ghost-button"
+                onClick={runFixInspector}
+              >
+                Analyze file structure
+              </button>
+            )}
+          </div>
+        )}
+
+        {fixMode && fixSuggestions.length > 0 && (
+          <div className="cm-panel" style={{ marginTop: 12 }}>
+            <div className="cm-panel-title">Data helper suggestions</div>
+            <ul className="cm-creator-highlights-list">
+              {fixSuggestions.map((s, idx) => (
+                <li key={idx}>{s}</li>
+              ))}
+            </ul>
           </div>
         )}
 

@@ -21,23 +21,24 @@ export default function BenchmarksPage() {
   }
 
   const rows = funnels.map((f) => {
-    const s = f.funnel ?? [];
-    const get = (stage: string) =>
-      s.find((x) => x.stage.toLowerCase() === stage)?.value ?? 0;
+    const stages = f.funnel ?? [];
+    const getStageValue = (stage: string) =>
+      stages.find((x) => x.stage.toLowerCase() === stage.toLowerCase())
+        ?.value ?? 0;
 
-    const impressions = get("impressions");
-    const clicks = get("clicks");
-    const dpv = get("dpv");
-    const atc = get("atc");
-    const orders = get("orders");
+    const impressions = getStageValue("impressions");
+    const clicks = getStageValue("clicks");
+    const dpv = getStageValue("dpv");
+    const atc = getStageValue("atc");
+    const orders = getStageValue("orders");
 
     const clickRate = impressions > 0 ? clicks / impressions : 0;
     const dpvRate = clicks > 0 ? dpv / clicks : 0;
     const atcRate = dpv > 0 ? atc / dpv : 0;
     const orderRate = atc > 0 ? orders / atc : 0;
 
-    const revenue = f.revenueByPlatform.reduce(
-      (sum, p) => sum + (p.revenue ?? 0),
+    const revenue = (f.revenueByPlatform ?? []).reduce(
+      (sum: number, p: any) => sum + (p.revenue ?? 0),
       0
     );
     const rpc = clicks > 0 ? revenue / clicks : 0;
@@ -71,6 +72,7 @@ export default function BenchmarksPage() {
         {mode === "real" ? "Live data" : "Demo data"}).
       </p>
 
+      {/* Workspace medians */}
       <div className="cm-panel" style={{ marginTop: 16 }}>
         <div className="cm-panel-header">
           <div>
@@ -80,6 +82,7 @@ export default function BenchmarksPage() {
             </div>
           </div>
         </div>
+
         <div className="cm-metrics-row" style={{ marginTop: 12 }}>
           <div className="cm-card">
             <div className="cm-card-label">Impressions → Clicks</div>
@@ -106,6 +109,7 @@ export default function BenchmarksPage() {
         </div>
       </div>
 
+      {/* Creator vs benchmark table */}
       <div className="cm-panel" style={{ marginTop: 16 }}>
         <div className="cm-panel-header">
           <div>

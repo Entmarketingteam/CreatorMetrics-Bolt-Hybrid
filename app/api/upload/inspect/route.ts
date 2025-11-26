@@ -2,18 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+type InspectFilePayload = {
+  name: string;
+  columns: string[];
+};
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as any));
-  const files = (body.files as { name: string; columns: string[] }[]) ?? [];
+  const files = (body.files as InspectFilePayload[]) ?? [];
 
   const suggestions: string[] = [];
 
-  files.forEach((f) => {
-    if (!f.columns.length) {
+  for (const f of files) {
+    if (!f || !f.name) continue;
+
+    if (!f.columns || !f.columns.length) {
       suggestions.push(
         `File "${f.name}" has no detected columns. Make sure it's a CSV export, not an XLSX screenshot.`
       );
-      return;
+      continue;
     }
 
     const colsLower = f.columns.map((c) => c.toLowerCase());
@@ -23,17 +30,19 @@ export async function POST(req: NextRequest) {
         `File "${f.name}" is missing a clear creator column. Add a "creator_name" column if possible.`
       );
     }
+
     if (!colsLower.some((c) => c.includes("click"))) {
       suggestions.push(
-        `File "${f.name}" has no click metrics. For funnels, include "clicks" or "sessions".`
+        `File "${f.name}" has no click metrics. For funnels, include a "clicks" or "sessions" column.`
       );
     }
-    if (!colsLower.some((c) => c.includes("order") || c.includes("purchases"))) {
+
+    if (!colsLower.some((c) => c.includes("order") || c.includes("purchase"))) {
       suggestions.push(
         `File "${f.name}" has no order/purchase column. Add "orders" or "purchases" so we can build funnels.`
       );
     }
-  });
+  }
 
   if (!suggestions.length) {
     suggestions.push(
