@@ -81,8 +81,28 @@ export default function UploadPage() {
       try {
         const formData = new FormData();
         for (const file of files) {
-          formData.append("files", file, file.name);
+          formData.append("files", file);
         }
+
+        const uploadRes = await fetch("/api/upload/files", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("File upload failed");
+        }
+
+        const uploadJson = await uploadRes.json();
+        const filePaths = uploadJson.files;
+
+        await fetch("/api/ingest/queue", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ files: filePaths }),
+        });
+
+        await fetch("/api/ingest/run", { method: "POST" });
 
         const res = await fetch("/api/ingest", {
           method: "POST",

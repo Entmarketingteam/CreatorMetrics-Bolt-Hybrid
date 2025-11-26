@@ -12,14 +12,15 @@ import {
 import { autoFixRows } from "@/lib/autoFix";
 import { buildFunnelsFromRows, mergeNewFunnels } from "@/lib/funnelBuilder";
 import { logUpload } from "@/lib/uploads";
+import { parseCSV } from "@/lib/csvLoader";
 
-async function loadRawRowsForFile(
-  fileName: string
-): Promise<{ columns: string[]; rows: Record<string, any>[] }> {
-  return {
-    columns: [],
-    rows: [],
-  };
+async function loadRawRowsForFile(filePath: string) {
+  try {
+    return parseCSV(filePath);
+  } catch (error) {
+    console.error("CSV parse error for", filePath, error);
+    return { columns: [], rows: [] };
+  }
 }
 
 export const runtime = "nodejs";
