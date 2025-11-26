@@ -1,0 +1,13 @@
+{
+  "id": "ws_default",
+  "name": "CreatorMetrics Demo Workspace",
+  "createdAt": "2025-11-26T19:38:02.668Z",
+  "updatedAt": "2025-11-26T19:38:11.813Z",
+  "managesMultipleCreators": true,
+  "connectedPlatforms": {
+    "instagram": true,
+    "ltk": true,
+    "amazon": true,
+    "tiktokShop": false
+  }
+}

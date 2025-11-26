@@ -1,0 +1,60 @@
+[
+  {
+    "creatorId": "nicki",
+    "creatorName": "Unknown Creator",
+    "funnel": [
+      {
+        "stage": "impressions",
+        "value": 0
+      },
+      {
+        "stage": "clicks",
+        "value": 105650
+      },
+      {
+        "stage": "dpv",
+        "value": 65882
+      },
+      {
+        "stage": "atc",
+        "value": 5097
+      },
+      {
+        "stage": "orders",
+        "value": 3398
+      }
+    ],
+    "revenueByPlatform": [
+      {
+        "platform": "instagram",
+        "revenue": 0,
+        "clicks": 105650,
+        "orders": 0,
+        "newCustomers": 0,
+        "returningCustomers": 0
+      },
+      {
+        "platform": "ltk",
+        "revenue": 12100.963346326,
+        "clicks": 65882,
+        "orders": 3398,
+        "newCustomers": 2039,
+        "returningCustomers": 1359
+      },
+      {
+        "platform": "amazon",
+        "revenue": 0,
+        "clicks": 0,
+        "orders": 0,
+        "newCustomers": 0,
+        "returningCustomers": 0
+      }
+    ],
+    "topPosts": [],
+    "comparedToLastPeriod": {
+      "revenueDeltaPct": 0,
+      "clickDeltaPct": 0,
+      "ordersDeltaPct": 0
+    }
+  }
+]
