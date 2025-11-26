@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
+const PUBLIC_PATHS = ["/login", "/setup", "/share"];
+
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/creators", label: "Creators" },
@@ -16,6 +18,7 @@ const navItems = [
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
   const [mode, setMode] = useState<"demo" | "real">("demo");
   const [hasReal, setHasReal] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -31,6 +34,29 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [commandResults, setCommandResults] = useState<
     { type: "creator" | "page"; label: string; sub?: string; href: string }[]
   >([]);
+
+  useEffect(() => {
+    const isPublic = PUBLIC_PATHS.some((p) =>
+      pathname === p || pathname.startsWith(p + "/")
+    );
+    if (isPublic) {
+      setAuthChecked(true);
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth");
+        if (res.ok) {
+          setAuthChecked(true);
+        } else {
+          router.push("/login");
+        }
+      } catch {
+        router.push("/login");
+      }
+    })();
+  }, [pathname, router]);
 
   useEffect(() => {
     async function load() {
@@ -190,6 +216,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
     setCommandResults([...creatorMatches, ...pageMatches].slice(0, 8));
   }
 
+  if (!authChecked) {
+    return null;
+  }
+
   return (
     <div className="cm-app-shell">
       {/* Sidebar */}
@@ -289,6 +319,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
               disabled={resetting}
             >
               {resetting ? "Resetting…" : "Reset data"}
+            </button>
+
+            <button
+              type="button"
+              className="cm-ghost-button"
+              onClick={async () => {
+                await fetch("/api/auth", { method: "DELETE" });
+                router.push("/login");
+              }}
+            >
+              Logout
             </button>
 
             <div className="cm-avatar-circle">NE</div>

@@ -11,9 +11,18 @@ export default function LoginPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
       router.push("/setup");
-    }, 400);
+    } catch (err) {
+      console.error("Login failed", err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -44,7 +53,7 @@ export default function LoginPage() {
             className="cm-ghost-button cm-ghost-button-strong"
             disabled={loading}
           >
-            {loading ? "Entering…" : "Continue with demo data"}
+            {loading ? "Entering…" : "Continue"}
           </button>
         </form>
       </div>

@@ -10,7 +10,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({} as any));
-  const { name, managesMultipleCreators, connectedPlatforms } = body ?? {};
+  const { name, managesMultipleCreators, connectedPlatforms, members } = body ?? {};
 
   const ws = saveWorkspace({
     name: typeof name === "string" && name.trim() ? name.trim() : undefined,
@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
       connectedPlatforms && typeof connectedPlatforms === "object"
         ? connectedPlatforms
         : undefined,
+    members: Array.isArray(members) ? members : undefined,
   });
 
   return NextResponse.json(ws);

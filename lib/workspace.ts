@@ -4,6 +4,12 @@ import path from "path";
 const DATA_DIR = path.join(process.cwd(), "data");
 const WORKSPACE_FILE = path.join(DATA_DIR, "workspace.json");
 
+export type WorkspaceMember = {
+  id: string;
+  email: string;
+  role: "owner" | "editor" | "viewer";
+};
+
 export type Workspace = {
   id: string;
   name: string;
@@ -16,6 +22,7 @@ export type Workspace = {
     amazon: boolean;
     tiktokShop: boolean;
   };
+  members: WorkspaceMember[];
 };
 
 function ensureDataDir() {
@@ -42,6 +49,13 @@ function defaultWorkspace(): Workspace {
       amazon: true,
       tiktokShop: false,
     },
+    members: [
+      {
+        id: "member_owner",
+        email: "founder@example.com",
+        role: "owner",
+      },
+    ],
   };
 }
 
